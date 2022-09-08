@@ -87,8 +87,13 @@ func NewSDAdb(config DBConf) (*SDAdb, error) {
 func (dbs *SDAdb) Connect() error {
 	start := time.Now()
 
+	// if already connected - do nothing
 	if dbs.db != nil {
-		dbs.db.Close()
+		err := dbs.db.Ping()
+		if err == nil {
+			log.Infoln("Already connected to database")
+			return nil
+		}
 	}
 
 	// default error
@@ -102,7 +107,11 @@ func (dbs *SDAdb) Connect() error {
 		dbs.db, err = sql.Open(dbs.Config.PgDataSource())
 		if err == nil {
 			log.Infoln("Connected to database")
-			return nil
+			// Open may just validate its arguments without creating a
+			// connection to the database. To verify that the data source name
+			// is valid, call Ping.
+			err = dbs.db.Ping()
+			return err
 		}
 		if time.Since(start) < FastConnectTimeout {
 			log.Debug("Fast reconnect")
@@ -168,6 +177,9 @@ func (dbs *SDAdb) checkAndReconnectIfNeeded() {
 
 // Close terminates the connection to the database
 func (dbs *SDAdb) Close() {
+	if dbs == nil {
+		return
+	}
 	err := dbs.db.Ping()
 	if err == nil {
 		log.Info("Closing database connection")
