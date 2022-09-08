@@ -87,8 +87,13 @@ func NewSDAdb(config DBConf) (*SDAdb, error) {
 func (dbs *SDAdb) Connect() error {
 	start := time.Now()
 
+	// if already connected - do nothing
 	if dbs.db != nil {
-		dbs.db.Close()
+		err := dbs.db.Ping()
+		if err == nil {
+			log.Infoln("Already connected to database")
+			return nil
+		}
 	}
 
 	// default error
