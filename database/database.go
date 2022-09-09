@@ -107,7 +107,11 @@ func (dbs *SDAdb) Connect() error {
 		dbs.db, err = sql.Open(dbs.Config.PgDataSource())
 		if err == nil {
 			log.Infoln("Connected to database")
-			return nil
+			// Open may just validate its arguments without creating a
+			// connection to the database. To verify that the data source name
+			// is valid, call Ping.
+			err = dbs.db.Ping()
+			return err
 		}
 		if time.Since(start) < FastConnectTimeout {
 			log.Debug("Fast reconnect")
