@@ -28,12 +28,7 @@ jobs:
               curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
               dep ensure
           fi
-      - name: Create certificates
-        run: |
-          cd dev_utils
-          bash ./make_certs.sh
-          cd ..
-      - name: Start MQ and DB
+      - name: Start DB
         run: docker-compose -f testing/docker-compose.yml up -d db
 
       - name: Test
