@@ -23,10 +23,10 @@ func (suite *DatabaseTests) SetupTest() {
 		Host:       "localhost",
 		Port:       5432,
 		User:       "lega_in",
-		Password:   "",
+		Password:   "lega_in",
 		Database:   "lega",
 		CACert:     "",
-		SslMode:    "",
+		SslMode:    "disable",
 		ClientCert: "",
 		ClientKey:  "",
 	}
@@ -53,14 +53,13 @@ func (suite *DatabaseTests) TestNewSDAdb() {
 		Password:   "password123",
 		Database:   "lega",
 		CACert:     "",
-		SslMode:    "",
+		SslMode:    "disable",
 		ClientCert: "",
 		ClientKey:  "",
 	}
 
-	db, err = NewSDAdb(wrongConf)
+	_, err = NewSDAdb(wrongConf)
 	assert.NotNil(suite.T(), err, "connection allowed with wrong credentials")
-	db.Close()
 
 }
 
@@ -99,7 +98,7 @@ func (suite *DatabaseTests) TestConnect() {
 		Password:   "password123",
 		Database:   "lega",
 		CACert:     "",
-		SslMode:    "",
+		SslMode:    "disable",
 		ClientCert: "",
 		ClientKey:  "",
 	}
@@ -107,7 +106,6 @@ func (suite *DatabaseTests) TestConnect() {
 	db.Config = wrongConf
 	err = db.Connect()
 	assert.NotNil(suite.T(), err, "connection allowed with wrong credentials")
-	db.Close()
 }
 
 // TestClose tests that the connection is properly closed
