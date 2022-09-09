@@ -106,6 +106,7 @@ func (suite *DatabaseTests) TestConnect() {
 	db.Config = wrongConf
 	err = db.Connect()
 	assert.NotNil(suite.T(), err, "connection allowed with wrong credentials")
+
 }
 
 // TestClose tests that the connection is properly closed
