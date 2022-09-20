@@ -177,7 +177,7 @@ func (dbs *SDAdb) checkAndReconnectIfNeeded() {
 
 // Close terminates the connection to the database
 func (dbs *SDAdb) Close() {
-	if dbs == nil {
+	if dbs.db == nil {
 		return
 	}
 	err := dbs.db.Ping()

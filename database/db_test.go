@@ -125,7 +125,7 @@ func (suite *DatabaseTests) TestClose() {
 	assert.NotNil(suite.T(), err, "query possible on closed connection")
 
 	// check that nothing happens if Close is called on a closed connection
-	for i := 0; i < 10; i++ {
-		db.Close()
-	}
+	db.Close()
+	assert.NotPanics(suite.T(), db.Close,
+		"Close paniced when called on closed connection")
 }
