@@ -1,6 +1,7 @@
 package broker
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -16,6 +17,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var tMqconf = MQConf{
@@ -68,14 +71,18 @@ func TestTLSConfigBroker(t *testing.T) {
 
 	noCa := confOK
 	noCa.CACert = ""
-	notls, err := TLSConfigBroker(noCa)
+	_, err = TLSConfigBroker(noCa)
 	assert.NoError(t, err, "Unexpected error")
-	assert.Zero(t, notls.ClientCAs, "Expected warnings were missing")
 
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	defer func() {
+		log.SetOutput(os.Stderr)
+	}()
 	noCa.CACert = tempDir + "/tls.key"
-	wrongCA, err := TLSConfigBroker(noCa)
+	_, err = TLSConfigBroker(noCa)
 	assert.NoError(t, err, "Unexpected error")
-	assert.Zero(t, wrongCA.ClientCAs, "Expected warnings were missing")
+	assert.Contains(t, buf.String(), "No certs appended, using system certs only")
 
 	badCertConf := confOK
 	badCertConf.ClientCert = tempDir + "/bar"
@@ -114,16 +121,77 @@ func TestNewMQNoTLS(t *testing.T) {
 		t.Skip("skip test since a real MQ is not present")
 	}
 	assert.NotNil(t, b, "NewMQ without ssl did not return a broker")
+	assert.False(t, b.Connection.IsClosed())
+
+	b.Channel.Close()
+	b.Connection.Close()
 }
 
 func TestNewMQTLS(t *testing.T) {
-	SsslConf := tMqconf
-	b, err := NewMQ(SsslConf)
+	certDir := fmt.Sprintf("/tmp/%d-%d-%d", time.Now().Year(), time.Now().Month(), time.Now().Day())
+
+	SslConf := tMqconf
+	SslConf.Port = 5679
+	SslConf.CACert = certDir + "/ca.crt"
+	SslConf.VerifyPeer = true
+	SslConf.ClientCert = certDir + "/tls.crt"
+	SslConf.ClientKey = certDir + "/tls.key"
+
+	b, err := NewMQ(SslConf)
 	if err != nil {
 		t.Log(err)
 		t.Skip("skip test since a real MQ is not present")
 	}
 	assert.NotNil(t, b, "NewMQ without ssl did not return a broker")
+	assert.False(t, b.Connection.IsClosed())
+
+	b.Channel.Close()
+	b.Connection.Close()
+}
+
+func TestSendMessage(t *testing.T) {
+	noSslConf := tMqconf
+	noSslConf.Ssl = false
+	b, err := NewMQ(noSslConf)
+	if err != nil {
+		t.Log(err)
+		t.Skip("skip test since a real MQ is not present")
+	}
+	assert.NotNil(t, b, "NewMQ without ssl did not return a broker")
+	assert.False(t, b.Connection.IsClosed())
+
+	err = b.SendMessage("1", "", "queue", true, []byte("test message"))
+	assert.NoError(t, err)
+
+	b.Channel.Close()
+	b.Connection.Close()
+}
+
+func TestGetMessages(t *testing.T) {
+	noSslConf := tMqconf
+	noSslConf.Ssl = false
+	b, err := NewMQ(noSslConf)
+	if err != nil {
+		t.Log(err)
+		t.Skip("skip test since a real MQ is not present")
+	}
+	assert.NotNil(t, b, "NewMQ without ssl did not return a broker")
+	assert.False(t, b.Connection.IsClosed())
+
+	d, err := b.GetMessages("queue")
+	assert.NoError(t, err)
+
+	for message := range d {
+		if "test message" == string(message.Body) {
+			err := message.Ack(false)
+			assert.NoError(t, err)
+
+			break
+		}
+	}
+
+	b.Channel.Close()
+	b.Connection.Close()
 }
 
 // Helper functions below this line
