@@ -1,11 +1,11 @@
-name: Go
+name: Go tests
 
 on: [push]
 
 jobs:
 
   build:
-    name: Build
+    name: Test
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -28,11 +28,21 @@ jobs:
               curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
               dep ensure
           fi
-      - name: Start DB
-        run: docker-compose -f testing/docker-compose.yml up -d db
+
+      - name: create directory
+        run: mkdir -p /tmp/$(date +'%Y-%m-%d')
+
+      - name: Start containers
+        run: sh testing/compose-start.sh
+
+      - name: debug
+        if: ${{ failure() }}
+        run: |
+          docker logs certfixer
+          docker logs mq_server
 
       - name: Test
-        run: go test --tags=integration -v -coverprofile=coverage.txt -covermode=atomic ./...
+        run: go test -v -coverprofile=coverage.txt -covermode=atomic ./...
 
       - name: Codecov
         uses: codecov/codecov-action@v3.1.0
