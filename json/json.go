@@ -1,41 +1,35 @@
 package json
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"strings"
 
-	"github.com/xeipuuv/gojsonschema"
+	"github.com/santhosh-tekuri/jsonschema/v5"
 )
+
 
 func ValidateJSON(reference string, body []byte) error {
 	dest := getStructName(reference)
 	if dest == "" {
 		return fmt.Errorf("Unknown reference schema")
 	}
+	compiler := jsonschema.NewCompiler()
+	compiler.Draft = jsonschema.Draft7
 
-	schema := gojsonschema.NewReferenceLoader(reference)
-	res, err := gojsonschema.Validate(schema, gojsonschema.NewBytesLoader(body))
+	schema, err := compiler.Compile(reference)
 	if err != nil {
 		return err
 	}
-	if !res.Valid() {
-		errorString := ""
 
-		for _, validErr := range res.Errors() {
-			errorString += validErr.String() + "\n\n"
-		}
-
-		return fmt.Errorf(errorString)
+	var v interface{}
+	if err := json.Unmarshal(body, &v); err != nil {
+		return err
 	}
 
-	d := json.NewDecoder(bytes.NewBuffer(body))
-	d.DisallowUnknownFields()
-	err = d.Decode(dest)
-	if err != nil {
-		return err
+	if err = schema.Validate(v); err != nil {
+		return fmt.Errorf("%#v", err)
 	}
 
 	return nil
