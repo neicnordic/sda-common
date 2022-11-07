@@ -1,5 +1,5 @@
-version: "3.7"
 services:
+
   mq_server:
     depends_on:
       certfixer:
@@ -38,6 +38,7 @@ services:
       - ./make-certs:/bin/make-certs
       - certs:/certs
       - /tmp/:/tmp/
+
   db:
     command: server /data
     container_name: db
@@ -50,11 +51,26 @@ services:
       interval: 5s
       timeout: 20s
       retries: 3
-    image: neicnordic/sda-db:v1.4.0
+    image: neicnordic/sda-db:${DATABASE_VERSION:-v1.4.0}
     ports:
       - "5432:5432"
     volumes:
       - dbdata:/data
+
+  tests:
+    image: golang:${GOLANG_VERSION:-1.19}
+    profiles:
+      - testing
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ../:/app
+    command:
+      - "/bin/sh"
+      - "-c"
+      - "cd /app; go test ./..."
+
 volumes:
   certs:
   dbdata:

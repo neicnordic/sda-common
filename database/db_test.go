@@ -1,6 +1,7 @@
 package database
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -18,9 +19,17 @@ func TestDatabaseTestSuite(t *testing.T) {
 
 func (suite *DatabaseTests) SetupTest() {
 
+	// check if we're in a docker container (the /.dockerenv file is available
+	// in all docker containers)
+	dbHost := "localhost"
+	_, err := os.Stat("/.dockerenv")
+	if err == nil {
+		dbHost = "db"
+	}
+
 	// Database connection variables
 	suite.dbConf = DBConf{
-		Host:       "localhost",
+		Host:       dbHost,
 		Port:       5432,
 		User:       "lega_in",
 		Password:   "lega_in",
