@@ -8,7 +8,7 @@ import (
 
 // RegisterFile inserts a file in the database, along with a "registered" log
 // event. If the file already exists in the database, the entry is updated, but
-// a new fileevent is always inserted.
+// a new file event is always inserted.
 func (dbs *SDAdb) RegisterFile(uploadPath, uploadUser string) (string, error) {
 
 	dbs.checkAndReconnectIfNeeded()
