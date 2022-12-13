@@ -76,7 +76,7 @@ func (suite *DatabaseTests) TestNewSDAdb() {
 func (suite *DatabaseTests) TestConnect() {
 
 	// test connecting to a database
-	db := SDAdb{db: nil, Version: -1, Config: suite.dbConf}
+	db := SDAdb{DB: nil, Version: -1, Config: suite.dbConf}
 
 	err := db.Connect()
 	assert.Nil(suite.T(), err, "failed connecting: %s", err)
@@ -90,7 +90,7 @@ func (suite *DatabaseTests) TestConnect() {
 	db.Close()
 	query := "SELECT MAX(version) FROM local_ega.dbschema_version"
 	var dbVersion = -1
-	err = db.db.QueryRow(query).Scan(&dbVersion)
+	err = db.DB.QueryRow(query).Scan(&dbVersion)
 	assert.NotNil(suite.T(), err, "query possible on closed connection")
 
 	// test reconnection by using getVersion()
@@ -130,7 +130,7 @@ func (suite *DatabaseTests) TestClose() {
 	// check that we can't do queries on a closed connection
 	query := "SELECT MAX(version) FROM local_ega.dbschema_version"
 	var dbVersion = -1
-	err = db.db.QueryRow(query).Scan(&dbVersion)
+	err = db.DB.QueryRow(query).Scan(&dbVersion)
 	assert.NotNil(suite.T(), err, "query possible on closed connection")
 
 	// check that nothing happens if Close is called on a closed connection
