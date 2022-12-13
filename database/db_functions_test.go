@@ -28,12 +28,12 @@ func (suite *DatabaseTests) TestRegisterFile() {
 
 	// check that the file is in the database
 	exists := false
-	err = db.db.QueryRow("SELECT EXISTS(SELECT 1 FROM sda.files WHERE id=$1)", fileId).Scan(&exists)
+	err = db.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM sda.files WHERE id=$1)", fileId).Scan(&exists)
 	assert.Nil(suite.T(), err, "Failed to check if registered file exists")
 	assert.True(suite.T(), exists, "RegisterFile() did not insert a row into sda.files with id: "+fileId)
 
 	// check that there is a "registered" file event connected to the file
-	err = db.db.QueryRow("SELECT EXISTS(SELECT 1 FROM sda.file_event_log WHERE file_id=$1 AND event='registered')", fileId).Scan(&exists)
+	err = db.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM sda.file_event_log WHERE file_id=$1 AND event='registered')", fileId).Scan(&exists)
 	assert.Nil(suite.T(), err, "Failed to check if registered file event exists")
 	assert.True(suite.T(), exists, "RegisterFile() did not insert a row into sda.file_event_log with id: "+fileId)
 
@@ -64,7 +64,7 @@ func (suite *DatabaseTests) TestMarkFileAsUploaded() {
 
 	exists := false
 	// check that there is an "uploaded" file event connected to the file
-	err = db.db.QueryRow("SELECT EXISTS(SELECT 1 FROM sda.file_event_log WHERE file_id=$1 AND event='uploaded')", fileId).Scan(&exists)
+	err = db.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM sda.file_event_log WHERE file_id=$1 AND event='uploaded')", fileId).Scan(&exists)
 	assert.Nil(suite.T(), err, "Failed to check if uploaded file event exists")
 	assert.True(suite.T(), exists, "MarkFileAsUploaded() did not insert a row into sda.file_event_log with id: "+fileId)
 }

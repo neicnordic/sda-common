@@ -29,7 +29,7 @@ type DBConf struct {
 
 // SDAdb struct that acts as a receiver for the DB update methods
 type SDAdb struct {
-	db      *sql.DB
+	DB      *sql.DB
 	Version int
 	Config  DBConf
 }
@@ -66,7 +66,7 @@ var SlowConnectRate = 1 * time.Minute
 // Currently, only postgresql connections are supported.
 func NewSDAdb(config DBConf) (*SDAdb, error) {
 
-	dbs := SDAdb{db: nil, Version: -1, Config: config}
+	dbs := SDAdb{DB: nil, Version: -1, Config: config}
 
 	err := dbs.Connect()
 	if err != nil {
@@ -88,8 +88,8 @@ func (dbs *SDAdb) Connect() error {
 	start := time.Now()
 
 	// if already connected - do nothing
-	if dbs.db != nil {
-		err := dbs.db.Ping()
+	if dbs.DB != nil {
+		err := dbs.DB.Ping()
 		if err == nil {
 			log.Infoln("Already connected to database")
 			return nil
@@ -104,13 +104,13 @@ func (dbs *SDAdb) Connect() error {
 		dbs.Config.Port, dbs.Config.Database, dbs.Config.User)
 
 	for ConnectTimeout <= 0 || ConnectTimeout > time.Since(start) {
-		dbs.db, err = sql.Open(dbs.Config.PgDataSource())
+		dbs.DB, err = sql.Open(dbs.Config.PgDataSource())
 		if err == nil {
 			log.Infoln("Connected to database")
 			// Open may just validate its arguments without creating a
 			// connection to the database. To verify that the data source name
 			// is valid, call Ping.
-			err = dbs.db.Ping()
+			err = dbs.DB.Ping()
 			return err
 		}
 		if time.Since(start) < FastConnectTimeout {
@@ -161,14 +161,14 @@ func (dbs *SDAdb) getVersion() (int, error) {
 
 	var dbVersion = -1
 
-	err := dbs.db.QueryRow(query).Scan(&dbVersion)
+	err := dbs.DB.QueryRow(query).Scan(&dbVersion)
 	return dbVersion, err
 }
 
 // checkAndReconnectIfNeeded validates the current connection with a ping
 // and tries to reconnect if necessary
 func (dbs *SDAdb) checkAndReconnectIfNeeded() {
-	err := dbs.db.Ping()
+	err := dbs.DB.Ping()
 	if err != nil {
 		log.Errorf("Database connection problem: %v", err)
 		dbs.Connect()
@@ -177,12 +177,12 @@ func (dbs *SDAdb) checkAndReconnectIfNeeded() {
 
 // Close terminates the connection to the database
 func (dbs *SDAdb) Close() {
-	if dbs.db == nil {
+	if dbs.DB == nil {
 		return
 	}
-	err := dbs.db.Ping()
+	err := dbs.DB.Ping()
 	if err == nil {
 		log.Info("Closing database connection")
-		dbs.db.Close()
+		dbs.DB.Close()
 	}
 }
