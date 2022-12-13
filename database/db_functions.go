@@ -21,7 +21,7 @@ func (dbs *SDAdb) RegisterFile(uploadPath, uploadUser string) (string, error) {
 
 	var fileId string
 
-	err := dbs.db.QueryRow(query, uploadPath, uploadUser).Scan(&fileId)
+	err := dbs.DB.QueryRow(query, uploadPath, uploadUser).Scan(&fileId)
 	return fileId, err
 }
 
@@ -38,6 +38,6 @@ func (dbs *SDAdb) MarkFileAsUploaded(fileId, userId, message string) error {
 
 	query := "INSERT INTO sda.file_event_log(file_id, event, user_id, message) VALUES ($1, 'uploaded', $2, $3)"
 
-	_, err := dbs.db.Exec(query, fileId, userId, message)
+	_, err := dbs.DB.Exec(query, fileId, userId, message)
 	return err
 }
